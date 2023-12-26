@@ -1,0 +1,6 @@
+pinecone==0.11.0
+Pillow==8.4.0
+torch==1.10.0
+transformers==4.13.0
+torchvision==0.11.1
+numpy==1.22.0
