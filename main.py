@@ -1,20 +1,14 @@
-import pinecone
 import numpy as np
 from PIL import Image, ExifTags
 import os
 from torchvision import transforms
 import torch
 from transformers import CLIPModel
+import upstash_vector as uv
 
-api_key = os.environ.get('PINECONE_API_KEY')
-environment = os.environ.get('PINECONE_ENVIRONMENT')
-
-# Initialize Pinecone client
-pinecone.init(api_key=api_key, environment=environment)
-
-# Connect to your Pinecone index
-index_name = "<your_index_name>"
-index = pinecone.Index(index_name)
+upstash_url = os.environ.get('UPSTASH_URL')
+token = os.environ.get('UPSTASH_TOKEN')
+index = uv.Index(url=upstash_url, token=token)
 
 # Define your image directory
 image_dir = "./images/views"
@@ -40,12 +34,11 @@ for filename in os.listdir(image_dir):
     if filename.endswith(".jpg"):
         image_path = os.path.join(image_dir, filename)
         image = Image.open(image_path)
-        embedding = transform_image(image)
+        embedding = transform_image(image).tolist()
 
         id = filename
 
-        vector = [{"values": embedding, "metadata": {}, "id": id }]
-        index.upsert(vector, namespace='ot')
+        index.upsert(vectors = [(id, embedding, {"metadata_field": "metadata_value"})])
 
         print(f"Upserted image {filename} with ID {filename}")
 
@@ -64,11 +57,12 @@ query_embedding = transform_image(query_image)  # Squeeze the tensor to remove b
 # The top_k parameter controls the number of results to retrieve
 top_k = 5
 query_vector = query_embedding.tolist()
-result = index.query(vector=query_vector, namespace='ot', top_k=top_k, include_metadata=True, include_values=True)
+result = index.query(vector=query_vector,  top_k=top_k, include_metadata=True)
 
 # Print results
 print(f"Query image: {query_image_path}")
 print(f"Top {top_k} results:")
 
-for i, res in enumerate(result.matches):
+for i, res in enumerate(result):
     print(f"Rank {i + 1}: ID={res.id}, score={res.score}")
+
