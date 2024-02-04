@@ -29,7 +29,7 @@ def transform_image(image):
     embedding = features.squeeze().cpu().numpy()
     return embedding.astype(np.float32)
 
-# Extract features for each image and insert into Pinecone index
+# Extract features for each image and insert into Upstash Vector index
 for filename in os.listdir(image_dir):
     if filename.endswith(".jpg"):
         image_path = os.path.join(image_dir, filename)
@@ -43,16 +43,14 @@ for filename in os.listdir(image_dir):
         print(f"Upserted image {filename} with ID {filename}")
 
 
-# Query Pinecone index
+# Query Upstash Vector index
 
 # Define your query image
 query_image_path = "./query_image.jpg"
 
 # Preprocess query image
 query_image = Image.open(query_image_path)
-query_embedding = transform_image(query_image)  # Squeeze the tensor to remove batch dimension
-
-# Query Pinecone index
+query_embedding = transform_image(query_image)
 
 # The top_k parameter controls the number of results to retrieve
 top_k = 5
